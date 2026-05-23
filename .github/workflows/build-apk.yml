@@ -33,9 +33,18 @@ jobs:
       - name: Init Capacitor Android
         shell: pwsh
         run: |
-          if (!(Test-Path capacitor.config.json)) {
-            npx cap init RiverDEM kr.riverdem.app --web-dir=.
+          if (!(Test-Path www)) {
+            mkdir www
           }
+
+          copy index.html www\index.html
+          copy manifest.webmanifest www\manifest.webmanifest
+          copy sw.js www\sw.js
+
+          if (!(Test-Path capacitor.config.json)) {
+            npx cap init RiverDEM kr.riverdem.app --web-dir=www
+          }
+
           npx cap add android
           npx cap sync android
 
@@ -44,8 +53,10 @@ jobs:
         run: |
           $manifest = "android/app/src/main/AndroidManifest.xml"
           $text = Get-Content $manifest -Raw
+
           if ($text -notmatch "ACCESS_FINE_LOCATION") {
             $text = $text -replace "<manifest ([^>]*)>", "<manifest `$1>`n    <uses-permission android:name=`"android.permission.INTERNET`" />`n    <uses-permission android:name=`"android.permission.ACCESS_FINE_LOCATION`" />`n    <uses-permission android:name=`"android.permission.ACCESS_COARSE_LOCATION`" />"
+
             Set-Content $manifest $text
           }
 
