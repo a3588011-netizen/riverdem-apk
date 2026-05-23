@@ -34,7 +34,7 @@ jobs:
         shell: pwsh
         run: |
           if (!(Test-Path capacitor.config.json)) {
-            npx cap init RiverDEM kr.riverdem.app --web-dir=. --npm-client=npm
+            npx cap init RiverDEM kr.riverdem.app --web-dir=.
           }
           npx cap add android
           npx cap sync android
