@@ -1,0 +1,62 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  build-apk:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Install Capacitor
+        run: npm install
+
+      - name: Init Capacitor Android
+        shell: pwsh
+        run: |
+          if (!(Test-Path capacitor.config.json)) {
+            npx cap init RiverDEM kr.riverdem.app --web-dir=. --npm-client=npm
+          }
+          npx cap add android
+          npx cap sync android
+
+      - name: Patch Android permissions
+        shell: pwsh
+        run: |
+          $manifest = "android/app/src/main/AndroidManifest.xml"
+          $text = Get-Content $manifest -Raw
+          if ($text -notmatch "ACCESS_FINE_LOCATION") {
+            $text = $text -replace "<manifest ([^>]*)>", "<manifest `$1>`n    <uses-permission android:name=`"android.permission.INTERNET`" />`n    <uses-permission android:name=`"android.permission.ACCESS_FINE_LOCATION`" />`n    <uses-permission android:name=`"android.permission.ACCESS_COARSE_LOCATION`" />"
+            Set-Content $manifest $text
+          }
+
+      - name: Build Debug APK
+        shell: pwsh
+        run: |
+          cd android
+          ./gradlew assembleDebug
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RiverDEM-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
