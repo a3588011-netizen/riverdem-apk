@@ -1,0 +1,11 @@
+{
+  "scripts": {
+    "apk:setup": "npm install && npx cap init RiverDEM kr.riverdem.app --web-dir=. --npm-client=npm && npx cap add android && npx cap sync android",
+    "apk:build": "cd android && gradlew.bat assembleDebug"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.1.2",
+    "@capacitor/cli": "^6.1.2",
+    "@capacitor/core": "^6.1.2"
+  }
+}
